@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DB Viewer</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { padding: 20px; }
+        .table-container { margin-bottom: 40px; }
+        h2 { margin-top: 20px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <h1 class="mb-4">Veritabanı Görüntüleyici</h1>
+        <button class="btn btn-primary mb-4" onclick="loadData()">Verileri Yenile</button>
+        
+        <div id="content">
+            <div class="text-center">Yükleniyor...</div>
+        </div>
+    </div>
+
+    <script>
+        async function loadData() {
+            const contentDiv = document.getElementById('content');
+            contentDiv.innerHTML = '<div class="text-center">Yükleniyor...</div>';
+
+            try {
+                const response = await fetch('/api/all-data');
+                const data = await response.json();
+
+                let html = '';
+
+                // Users Table
+                html += generateTable('Kullanıcılar (users)', data.users);
+                
+                // Categories Table
+                html += generateTable('Kategoriler (categories)', data.categories);
+                
+                // Transactions Table
+                html += generateTable('İşlemler (transactions)', data.transactions);
+
+                contentDiv.innerHTML = html;
+            } catch (error) {
+                contentDiv.innerHTML = `<div class="alert alert-danger">Hata oluştu: ${error.message}</div>`;
+            }
+        }
+
+        function generateTable(title, rows) {
+            if (!rows || rows.length === 0) {
+                return `
+                    <div class="table-container">
+                        <h2>${title}</h2>
+                        <div class="alert alert-warning">Veri bulunamadı.</div>
+                    </div>`;
+            }
+
+            const columns = Object.keys(rows[0]);
+            
+            let tableHtml = `
+                <div class="table-container">
+                    <h2>${title} (${rows.length} kayıt)</h2>
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover table-bordered">
+                            <thead class="table-dark">
+                                <tr>
+                                    ${columns.map(col => `<th>${col}</th>`).join('')}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${rows.map(row => `
+                                    <tr>
+                                        ${columns.map(col => `<td>${formatValue(row[col])}</td>`).join('')}
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>`;
+            
+            return tableHtml;
+        }
+
+        function formatValue(val) {
+            if (val === null || val === undefined) return '<span class="text-muted">NULL</span>';
+            if (typeof val === 'object' && val !== null) return JSON.stringify(val);
+            return val;
+        }
+
+        // Load on start
+        loadData();
+    </script>
+</body>
+</html>

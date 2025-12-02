@@ -1,0 +1,12 @@
+# Root-level ignores for workspace
+*.iml
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+build/
+**/node_modules/
+*.log
+
+# Ignore local environment files in any subproject
+**/.env
